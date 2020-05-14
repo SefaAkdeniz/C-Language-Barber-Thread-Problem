@@ -4,15 +4,16 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#define MUSTERI_SAYISI 8
+#define MUSTERI_SAYISI 10
 #define TRAS_SURESI 3
 
-int koltuk_sayisi =0;
+const int koltuk_sayisi =1;
 int musteri_sayisi=0;
-int sandalye_sayisi=0;
+const int sandalye_sayisi=5;
 int bos_sandalye_sayisi=0;
 int hizmet_edilecek_musteri =0;
 int oturalacak_sandalye =0;
+int ilk_tras=0;
 
 int* koltuk;
 
@@ -24,14 +25,23 @@ int Berber(void* sayi)
 {
     int berber_id = *(int*)sayi + 1;
     int sonrakiMusteri, musteri_id;
+    
+    if(ilk_tras==0)
+    {
+    	printf("Berber\tdukkana girdi.\n\n");
+    }
+    else
+    {
+    	printf("\nBerber\tuyandi.\n\n");
+    }
 
-    printf("Berber \tdükkana girdi.\n");
+    
 
     while(1)
     {
         if(!musteri_id)
         {
-            printf("Berber uyudu\n\n");
+            printf("\n\nBerber uyudu\n\n");
         }
 
         sem_wait(&berber_sem);
@@ -45,7 +55,7 @@ int Berber(void* sayi)
         sem_post(&mutex_sem);
         sem_post(&musteriler_sem);
 
-        printf(" Berber \t%d. musterinin trasina basladý. \n\n",musteri_id);
+        printf(" Berber \t%d. musterinin trasina basladi. \n\n",musteri_id);
         sleep(TRAS_SURESI);
         printf(" Berber \t%d. musterinin trasini bitirdi. \n\n",musteri_id);
     }
@@ -59,13 +69,13 @@ void Musteri(void* sayi)
 
     sem_wait(&mutex_sem);
 
-    printf("%d. Musteri \tdukkana geldi. \n",s);
+    printf("%d. Musteri\tdukkana geldi. \n",s);
 
     if(bos_sandalye_sayisi > 0)
     {
 
         bos_sandalye_sayisi--;
-        printf("%d. Musteri\t bekliyor.\n\n",s);
+        printf("%d. Musteri\tsandalyede bekliyor.\n\n",s);
 
         oturalacak_sandalye=(++oturalacak_sandalye)%sandalye_sayisi;
         oturulanSandalye = oturalacak_sandalye;
@@ -84,7 +94,7 @@ void Musteri(void* sayi)
     }
     else{
         sem_post(&mutex_sem);
-        printf("%d. Musteri\t beklemek için koltuk bulamadý. Dukkandan ayriliyor.\n\n",s);
+        printf("%d. Musteri\tbeklemek icin koltuk bulamadi. Dukkandan ayriliyor.\n\n",s);
     }
     pthread_exit(0);
 }
@@ -95,47 +105,90 @@ void Bekle()
     usleep(rand() % (250000 - 50000 +1) +50000);
 }
 
-int Main()
-{
-    printf("Müsteri Sayisi Giriniz: ");
-    scanf("%d",&musteri_sayisi);
-    printf("Sandalye Sayisi Giriniz: ");
-    scanf("%d",&sandalye_sayisi);
-    printf("Koltuk Sayisi Giriniz: ");
-    scanf("%d",&koltuk_sayisi);
+int main(int argc , char** args)
+{	
+	    printf("Musteri Sayisi Giriniz: ");
+	    scanf("%d",&musteri_sayisi);
+	    	
+	    bos_sandalye_sayisi = sandalye_sayisi;
+	    koltuk = (int*) malloc(sizeof(int)*sandalye_sayisi);
 
-    bos_sandalye_sayisi = sandalye_sayisi;
-    koltuk = (int*) malloc(sizeof(int)*sandalye_sayisi);
+	    if(musteri_sayisi >MUSTERI_SAYISI)
+	    {
+		printf("\n Musteri siniri: %d\n\n",MUSTERI_SAYISI);
+		return EXIT_FAILURE;
+	    }
 
-    if(musteri_sayisi >MUSTERI_SAYISI)
+	    pthread_t berber[koltuk_sayisi], musteri[musteri_sayisi];
+
+	    sem_init(&berber_sem, 0,0);
+	    sem_init(&musteriler_sem, 0,0);
+	    sem_init(&mutex_sem, 0,1);
+
+	    printf("\n Berber Dukkani acti. \n\n");
+
+	    for(int i=0; i < koltuk_sayisi;i++)
+	    {
+		pthread_create(&berber[i],NULL, (void*)Berber,(void*)&i);
+		sleep(1);
+	    }
+	    for(int i=0; i < musteri_sayisi;i++)
+	    {
+		pthread_create(&musteri[i],NULL, (void*)Musteri,(void*)&i);
+		sleep(1);
+	    }
+	    for(int i=0; i < musteri_sayisi;i++)
+	    {
+		pthread_join(musteri[i],NULL);
+		sleep(1);
+	    }
+	    ilk_tras=1;
+    do
     {
-        printf(printf("\n Müsteri siniri: %d\n\n"),MUSTERI_SAYISI);
-        return EXIT_FAILURE;
-    }
+    	sleep(3);
+    	printf("Musteri Sayisi Giriniz: ");
+	scanf("%d",&musteri_sayisi);
 
-    pthread_t berber[koltuk_sayisi], musteri[musteri_sayisi];
+    	if(!musteri_sayisi==0 )
+    	{
+	    bos_sandalye_sayisi = sandalye_sayisi;
+	    koltuk = (int*) malloc(sizeof(int)*sandalye_sayisi);
 
-    sem_init(&berber_sem, 0,0);
-    sem_init(&musteriler_sem, 0,0);
-    sem_init(&mutex_sem, 0,1);
+	    if(musteri_sayisi >MUSTERI_SAYISI)
+	    {
+		printf("\n Müsteri siniri: %d\n\n",MUSTERI_SAYISI);
+		return EXIT_FAILURE;
+	    }
 
-    printf("\n Berber Dukkani acti. \n\n");
+	    pthread_t berber[koltuk_sayisi], musteri[musteri_sayisi];
 
-    for(int i=0; i < koltuk_sayisi;i++)
-    {
-        pthread_create(&berber[i],NULL, (void*)Berber,(void*)&i);
-        sleep(1);
-    }
-    for(int i=0; i < musteri_sayisi;i++)
-    {
-        pthread_create(&musteri[i],NULL, (void*)Musteri,(void*)&i);
-        sleep(1);
-    }
-    for(int i=0; i < musteri_sayisi;i++)
-    {
-        pthread_join(&musteri[i],NULL);
-        sleep(1);
-    }
+	    sem_init(&berber_sem, 0,0);
+	    sem_init(&musteriler_sem, 0,0);
+	    sem_init(&mutex_sem, 0,1);
 
-    printf("\n Tum musterilerin trasi bitti. Berber dukkaný kapattý \n\n");
+
+	    for(int i=0; i < koltuk_sayisi;i++)
+	    {
+		pthread_create(&berber[i],NULL, (void*)Berber,(void*)&i);
+		sleep(1);
+	    }
+	    for(int i=0; i < musteri_sayisi;i++)
+	    {
+		pthread_create(&musteri[i],NULL, (void*)Musteri,(void*)&i);
+		sleep(1);
+	    }
+	    for(int i=0; i < musteri_sayisi;i++)
+	    {
+		pthread_join(musteri[i],NULL);
+		sleep(1);
+	    }
+    	}
+    	else if(musteri_sayisi==0 )
+    	{
+    	    printf("Berber uyudu\n\n");
+    	}
+	    
+    }while(1);
+    
+
 }

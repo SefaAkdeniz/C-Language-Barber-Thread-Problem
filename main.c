@@ -8,12 +8,13 @@
 #define TRAS_SURESI 3
 
 const int koltuk_sayisi =1;
-int musteri_sayisi=0;
 const int sandalye_sayisi=5;
-int bos_sandalye_sayisi=0;
-int hizmet_edilecek_musteri =0;
+int musteri_sayisi=0;
+int bos_beklemeSandalye_sayisi=0;
+int tras_edilecek_musteri =0;
 int oturalacak_sandalye =0;
 int ilk_tras=0;
+int musteri_durum_sayisi=0;
 
 int* koltuk;
 
@@ -21,9 +22,8 @@ sem_t berber_sem;
 sem_t musteriler_sem;
 sem_t mutex_sem;
 
-int Berber(void* sayi)
+int Berber()
 {
-    int berber_id = *(int*)sayi + 1;
     int sonrakiMusteri, musteri_id;
     
     if(ilk_tras==0)
@@ -35,29 +35,28 @@ int Berber(void* sayi)
     	printf("\nBerber\tuyandi.\n\n");
     }
 
-    
-
     while(1)
     {
-        if(!musteri_id)
-        {
-            printf("\n\nBerber uyudu\n\n");
-        }
-
         sem_wait(&berber_sem);
         sem_wait(&mutex_sem);
 
-        hizmet_edilecek_musteri = (++hizmet_edilecek_musteri) % sandalye_sayisi;
-        sonrakiMusteri=hizmet_edilecek_musteri;
+        tras_edilecek_musteri = (++tras_edilecek_musteri) % sandalye_sayisi;
+        sonrakiMusteri=tras_edilecek_musteri;
         musteri_id=koltuk[sonrakiMusteri];
         koltuk[sonrakiMusteri]=pthread_self();
-
+	musteri_durum_sayisi=musteri_durum_sayisi-1;
+	
         sem_post(&mutex_sem);
         sem_post(&musteriler_sem);
 
         printf(" Berber \t%d. musterinin trasina basladi. \n\n",musteri_id);
         sleep(TRAS_SURESI);
         printf(" Berber \t%d. musterinin trasini bitirdi. \n\n",musteri_id);
+        
+        if(!musteri_durum_sayisi)
+        {
+            printf("Berber uyudu\n\n\n");
+        }
     }
     pthread_exit(0);
 }
@@ -71,10 +70,10 @@ void Musteri(void* sayi)
 
     printf("%d. Musteri\tdukkana geldi. \n",s);
 
-    if(bos_sandalye_sayisi > 0)
+    if(bos_beklemeSandalye_sayisi > 0)
     {
 
-        bos_sandalye_sayisi--;
+        bos_beklemeSandalye_sayisi--;
         printf("%d. Musteri\tsandalyede bekliyor.\n\n",s);
 
         oturalacak_sandalye=(++oturalacak_sandalye)%sandalye_sayisi;
@@ -88,7 +87,7 @@ void Musteri(void* sayi)
         sem_wait(&mutex_sem);
 
         berber_kimligi = koltuk[oturulanSandalye];
-        bos_sandalye_sayisi++;
+        bos_beklemeSandalye_sayisi++;
 
         sem_post(&mutex_sem);
     }
@@ -109,8 +108,9 @@ int main(int argc , char** args)
 {	
 	    printf("Musteri Sayisi Giriniz: ");
 	    scanf("%d",&musteri_sayisi);
-	    	
-	    bos_sandalye_sayisi = sandalye_sayisi;
+	    
+	    musteri_durum_sayisi =musteri_sayisi;
+	    bos_beklemeSandalye_sayisi = sandalye_sayisi;
 	    koltuk = (int*) malloc(sizeof(int)*sandalye_sayisi);
 
 	    if(musteri_sayisi >MUSTERI_SAYISI)
@@ -143,15 +143,18 @@ int main(int argc , char** args)
 		sleep(1);
 	    }
 	    ilk_tras=1;
+	    
     do
     {
     	sleep(3);
+    	musteri_durum_sayisi=0;
     	printf("Musteri Sayisi Giriniz: ");
 	scanf("%d",&musteri_sayisi);
+	musteri_durum_sayisi=musteri_sayisi;
 
     	if(!musteri_sayisi==0 )
     	{
-	    bos_sandalye_sayisi = sandalye_sayisi;
+	    bos_beklemeSandalye_sayisi = sandalye_sayisi;
 	    koltuk = (int*) malloc(sizeof(int)*sandalye_sayisi);
 
 	    if(musteri_sayisi >MUSTERI_SAYISI)
@@ -185,7 +188,7 @@ int main(int argc , char** args)
     	}
     	else if(musteri_sayisi==0 )
     	{
-    	    printf("Berber uyudu\n\n");
+	    printf("\nBerber Uyudu.\n\n");
     	}
 	    
     }while(1);

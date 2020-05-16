@@ -5,7 +5,6 @@
 #include <semaphore.h>
 
 #define TRAS_ZAMANI 3  	// Traþ Süresini Belirledik
-#define MAX_MUSTERI 10 	// Max Müþteri Sayýmýzý Belirledik
 #define koltukSayisi 1		// Berber 1 tane ve berber koltuðumuzda 1 tane
 #define sandalyeSayisi 5	// 10 tane bekleme sandalyemiz var
 
@@ -112,11 +111,6 @@ int main(int argc , char** args)
 	    bosBeklemeSandalyeSayisi = sandalyeSayisi;
 	    koltuk = (int*) malloc(sizeof(int)*sandalyeSayisi);  // Belirlenen Eleman Kadar Koltuk Dizisini Oluþturduk
 
-	    if(musteriSayisi > MAX_MUSTERI)    			
-	    {
-		printf("\n Musteri siniri: %d\n\n",MAX_MUSTERI);	// Girdiðimiz müþteri sayýmýz max sayýmýzdan fazla ise hata verdiriyoruz.
-		return EXIT_FAILURE;
-	    }
 
 	    pthread_t berber[koltukSayisi], musteri[musteriSayisi];   // Berber ve müþteri thread deðiþkenlerimizi oluþturduk
 
@@ -159,11 +153,6 @@ int main(int argc , char** args)
 	    bosBeklemeSandalyeSayisi = sandalyeSayisi;
 	    koltuk = (int*) malloc(sizeof(int)*sandalyeSayisi);   // Belirlenen Eleman Kadar Koltuk Dizisini Oluþturduk
 
-	    if(musteriSayisi >MAX_MUSTERI)
-	    {
-		printf("\n Müsteri siniri: %d\n\n",MAX_MUSTERI);  // Girdiðimiz müþteri sayýmýz max sayýmýzdan fazla ise hata verdiriyoruz.
-		return EXIT_FAILURE;
-	    }
 
 	    pthread_t berber[koltukSayisi], musteri[musteriSayisi]; // Berber ve müþteri thread deðiþkenlerimizi oluþturduk
 

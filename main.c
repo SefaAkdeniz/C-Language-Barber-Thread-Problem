@@ -1,15 +1,15 @@
 #include <stdio.h>
-#include <stdlib.h>     // Kütüphanelerimizi tanımladık
+#include <stdlib.h>     // KÃ¼tÃ¼phanelerimizi tanÄ±mladÄ±k
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
 
-#define TRAS_ZAMANI 3  	// Traş Süresini Belirledik
-#define koltukSayisi 1		// Berber 1 tane ve berber koltuğumuzda 1 tane
-#define sandalyeSayisi 5	// 10 tane bekleme sandalyemiz var
+#define TRAS_ZAMANI 3  	// TraÅŸ SÃ¼resini Belirledik
+#define koltukSayisi 1		// Berber 1 tane ve berber koltuÄŸumuzda 1 tane
+#define sandalyeSayisi 5	// 5 tane bekleme sandalyemiz var
 
 
-int musteriSayisi=0;			// İlk değerlerimizi 0 atadık
+int musteriSayisi=0;			// Ä°lk deÄŸerlerimizi 0 atadÄ±k
 int bosBeklemeSandalyeSayisi=0;
 int trasEdilecekMusteri =0;
 int oturalacakSandalye =0;
@@ -19,7 +19,7 @@ int musteriDurumSayisi=0;
 int* koltuk;
 
 
-sem_t berber_sem;			// Kullanacağımız Semaforları tanımladık
+sem_t berber_sem;			// KullanacaÄŸÄ±mÄ±z SemaforlarÄ± tanÄ±mladÄ±k
 sem_t musteriler_sem;
 sem_t mutex_sem;
 
@@ -28,93 +28,93 @@ int Berber()
 {
     int sonrakiMusteri, musteriID;
     
-    if(ilkTras==0)  	// Berber ilk müşteri grubunda dükkanı açar
+    if(ilkTras==0)  	// Berber ilk mÃ¼ÅŸteri grubunda dÃ¼kkanÄ± aÃ§ar
     {
     	printf("Berber\tdukkana girdi.\n\n");
     }
-    else		// Diğer Müşteri gruplarında ise uyanır.
+    else		// DiÄŸer MÃ¼ÅŸteri gruplarÄ±nda ise uyanÄ±r.
     {
     	printf("\nBerber\tuyandi.\n\n");
     }
 
-    while(1)  		// Sonsuz Döngü İçerisinde
+    while(1)  		// Sonsuz DÃ¶ngÃ¼ Ä°Ã§erisinde
     {
     
-        sem_wait(&berber_sem);      // Müşterinin yoksa koltuğa iletişim engellenir.
+        sem_wait(&berber_sem);      // MÃ¼ÅŸterinin yoksa koltuÄŸa iletiÅŸim engellenir.
         sem_wait(&mutex_sem);
 
-        trasEdilecekMusteri = (++trasEdilecekMusteri) % sandalyeSayisi;  	// Traş edilecek müşteri bekleyen müşterilerden seçilir	
+        trasEdilecekMusteri = (++trasEdilecekMusteri) % sandalyeSayisi;  	// TraÅŸ edilecek mÃ¼ÅŸteri bekleyen mÃ¼ÅŸterilerden seÃ§ilir	
         sonrakiMusteri=trasEdilecekMusteri;
         musteriID=koltuk[sonrakiMusteri];
         koltuk[sonrakiMusteri]=pthread_self();
 	musteriDurumSayisi=musteriDurumSayisi-1;
 	
-        sem_post(&mutex_sem);		// Koltuğa erişim açılır berber müşteri ile ilgilenmeye başlar
+        sem_post(&mutex_sem);		// KoltuÄŸa eriÅŸim aÃ§Ä±lÄ±r berber mÃ¼ÅŸteri ile ilgilenmeye baÅŸlar
         sem_post(&musteriler_sem);
 
-        printf(" Berber \t%d. musterinin trasina basladi. \n\n",musteriID);  // Berber traşa başlar ve belirlediğimiz süre sonunda traşı bitirir
+        printf(" Berber \t%d. musterinin trasina basladi. \n\n",musteriID);  // Berber traÅŸa baÅŸlar ve belirlediÄŸimiz sÃ¼re sonunda traÅŸÄ± bitirir
         sleep(TRAS_ZAMANI);
         printf(" Berber \t%d. musterinin trasini bitirdi. \n\n",musteriID);
         
-        if(!musteriDurumSayisi)     			// Berber traş edilecek müşteriler bittiğinde uyur.
+        if(!musteriDurumSayisi)     			// Berber traÅŸ edilecek mÃ¼ÅŸteriler bittiÄŸinde uyur.
         {
             printf("Berber uyudu\n\n\n");
         }
     }
-    pthread_exit(0);		// Thread sonlandırılır
+    pthread_exit(0);		// Thread sonlandÄ±rÄ±lÄ±r
 }
 
-void Musteri(void* sayi)	// Müşteri fonksiyonu müşteri numarasını parametre olarak alır
+void Musteri(void* sayi)	// MÃ¼ÅŸteri fonksiyonu mÃ¼ÅŸteri numarasÄ±nÄ± parametre olarak alÄ±r
 {
-    int kimlik = *(int*)sayi + 1;  // Müşterimim kimliğin alınır
+    int kimlik = *(int*)sayi + 1;  // MÃ¼ÅŸterimim kimliÄŸin alÄ±nÄ±r
     int oturulanSandalye;
 
-    sem_wait(&mutex_sem);  	    // Koltuğa erişim engellenir
+    sem_wait(&mutex_sem);  	    // KoltuÄŸa eriÅŸim engellenir
 
-    printf("%d. Musteri\tdukkana geldi. \n",kimlik);  // Gelen müşteri ekrana yazdırılır
+    printf("%d. Musteri\tdukkana geldi. \n",kimlik);  // Gelen mÃ¼ÅŸteri ekrana yazdÄ±rÄ±lÄ±r
 
     if(bosBeklemeSandalyeSayisi > 0)
     {
-        bosBeklemeSandalyeSayisi--;					// Eğer boş bekleme sandalyesi varsa sandalye sayısı bir azaltılır ve
-        printf("%d. Musteri\tsandalyede bekliyor.\n\n",kimlik);	// Müşteri beklemeye başlar 
+        bosBeklemeSandalyeSayisi--;					// EÄŸer boÅŸ bekleme sandalyesi varsa sandalye sayÄ±sÄ± bir azaltÄ±lÄ±r ve
+        printf("%d. Musteri\tsandalyede bekliyor.\n\n",kimlik);	// MÃ¼ÅŸteri beklemeye baÅŸlar 
 
-        oturalacakSandalye=(++oturalacakSandalye)%sandalyeSayisi;	// Müşterinin boş sandalyelerden birine oturması sağlanır
+        oturalacakSandalye=(++oturalacakSandalye)%sandalyeSayisi;	// MÃ¼ÅŸterinin boÅŸ sandalyelerden birine oturmasÄ± saÄŸlanÄ±r
         oturulanSandalye = oturalacakSandalye;
         koltuk[oturulanSandalye]=kimlik;
 
-        sem_post(&mutex_sem);		// Koltuğa erişim engeli kaldırlır
-        sem_post(&berber_sem);	// Berber uyuyorsa uyandırılır ve koltuğa geçmesi sağlanır
+        sem_post(&mutex_sem);		// KoltuÄŸa eriÅŸim engeli kaldÄ±rlÄ±r
+        sem_post(&berber_sem);	// Berber uyuyorsa uyandÄ±rÄ±lÄ±r ve koltuÄŸa geÃ§mesi saÄŸlanÄ±r
 
-        sem_wait(&musteriler_sem);	// Müşteri traş olmak için bekler
-        sem_wait(&mutex_sem);		// Müşterilerin aynı anda traş olması önlenir
+        sem_wait(&musteriler_sem);	// MÃ¼ÅŸteri traÅŸ olmak iÃ§in bekler
+        sem_wait(&mutex_sem);		// MÃ¼ÅŸterilerin aynÄ± anda traÅŸ olmasÄ± Ã¶nlenir
 
-        bosBeklemeSandalyeSayisi++; // Müşteri traş olmaya başladığında dükkandaki sandelye sayısı bir arttırılır.
+        bosBeklemeSandalyeSayisi++; // MÃ¼ÅŸteri traÅŸ olmaya baÅŸladÄ±ÄŸÄ±nda dÃ¼kkandaki sandelye sayÄ±sÄ± bir arttÄ±rÄ±lÄ±r.
 
-        sem_post(&mutex_sem);		// Erişim engellenir
+        sem_post(&mutex_sem);		// EriÅŸim engellenir
     }
     else{
-        sem_post(&mutex_sem); 	// Engel kaldırılır , eğer boş sandalye yoksa müşteri dükkandan ayrılır
+        sem_post(&mutex_sem); 	// Engel kaldÄ±rÄ±lÄ±r , eÄŸer boÅŸ sandalye yoksa mÃ¼ÅŸteri dÃ¼kkandan ayrÄ±lÄ±r
         printf("%d. Musteri\tbeklemek icin sandalye bulamadi. Dukkandan ayriliyor.\n\n",kimlik);  
     }
-    pthread_exit(0);	// Thread sonlandırılır
+    pthread_exit(0);	// Thread sonlandÄ±rÄ±lÄ±r
 }
 
 
 int main(int argc , char** args)
 {	
-		// İlk müşeriler için bilgilerimizi alıyoruz
+		// Ä°lk mÃ¼ÅŸeriler iÃ§in bilgilerimizi alÄ±yoruz
 
 	    printf("Musteri Sayisi Giriniz: "); 
 	    scanf("%d",&musteriSayisi);
 	    
 	    musteriDurumSayisi =musteriSayisi;
 	    bosBeklemeSandalyeSayisi = sandalyeSayisi;
-	    koltuk = (int*) malloc(sizeof(int)*sandalyeSayisi);  // Belirlenen Eleman Kadar Koltuk Dizisini Oluşturduk
+	    koltuk = (int*) malloc(sizeof(int)*sandalyeSayisi);  // Belirlenen Eleman Kadar Koltuk Dizisini OluÅŸturduk
 
 
-	    pthread_t berber[koltukSayisi], musteri[musteriSayisi];   // Berber ve müşteri thread değişkenlerimizi oluşturduk
+	    pthread_t berber[koltukSayisi], musteri[musteriSayisi];   // Berber ve mÃ¼ÅŸteri thread deÄŸiÅŸkenlerimizi oluÅŸturduk
 
-	    sem_init(&berber_sem, 0,0);		// Sem init methoduyla semaforlarımızı başlattık
+	    sem_init(&berber_sem, 0,0);		// Sem init methoduyla semaforlarÄ±mÄ±zÄ± baÅŸlattÄ±k
 	    sem_init(&musteriler_sem, 0,0); 
 	    sem_init(&mutex_sem, 0,1);
 
@@ -122,15 +122,15 @@ int main(int argc , char** args)
 
 	    for(int i=0; i < koltukSayisi;i++)
 	    {
-		pthread_create(&berber[i],NULL, (void*)Berber,(void*)&i);  // Berber thread'lerini pthread_create methodu ile oluşturduk
+		pthread_create(&berber[i],NULL, (void*)Berber,(void*)&i);  // Berber thread'lerini pthread_create methodu ile oluÅŸturduk
 		sleep(1);
 	    }
 	    for(int i=0; i < musteriSayisi;i++)
 	    {
-		pthread_create(&musteri[i],NULL, (void*)Musteri,(void*)&i); // Müşteri thread'lerini pthread_create methodu ile oluşturduk
+		pthread_create(&musteri[i],NULL, (void*)Musteri,(void*)&i); // MÃ¼ÅŸteri thread'lerini pthread_create methodu ile oluÅŸturduk
 		sleep(1);
 	    }
-	    for(int i=0; i < musteriSayisi;i++)       		// Tüm Müşterilerin işlemlerinin bitmesini bekliyoruz
+	    for(int i=0; i < musteriSayisi;i++)       		// TÃ¼m MÃ¼ÅŸterilerin iÅŸlemlerinin bitmesini bekliyoruz
 	    {
 		pthread_join(musteri[i],NULL);
 		sleep(1);
@@ -139,7 +139,7 @@ int main(int argc , char** args)
 	    
     do
     {
-    				// İlk Müşteri grubundan sonraki her grup için
+    				// Ä°lk MÃ¼ÅŸteri grubundan sonraki her grup iÃ§in
     	
     	sleep(3);
     	musteriDurumSayisi=0;
@@ -151,33 +151,33 @@ int main(int argc , char** args)
     	if(!musteriSayisi==0 )
     	{
 	    bosBeklemeSandalyeSayisi = sandalyeSayisi;
-	    koltuk = (int*) malloc(sizeof(int)*sandalyeSayisi);   // Belirlenen Eleman Kadar Koltuk Dizisini Oluşturduk
+	    koltuk = (int*) malloc(sizeof(int)*sandalyeSayisi);   // Belirlenen Eleman Kadar Koltuk Dizisini OluÅŸturduk
 
 
-	    pthread_t berber[koltukSayisi], musteri[musteriSayisi]; // Berber ve müşteri thread değişkenlerimizi oluşturduk
+	    pthread_t berber[koltukSayisi], musteri[musteriSayisi]; // Berber ve mÃ¼ÅŸteri thread deÄŸiÅŸkenlerimizi oluÅŸturduk
 
 	    sem_init(&berber_sem, 0,0);
-	    sem_init(&musteriler_sem, 0,0);  			// Sem init methoduyla semaforlarımızı başlattık
+	    sem_init(&musteriler_sem, 0,0);  			// Sem init methoduyla semaforlarÄ±mÄ±zÄ± baÅŸlattÄ±k
 	    sem_init(&mutex_sem, 0,1);
 
 
 	    for(int i=0; i < koltukSayisi;i++)
 	    {
-		pthread_create(&berber[i],NULL, (void*)Berber,(void*)&i);  // Berber thread'lerini pthread_create methodu ile oluşturduk
+		pthread_create(&berber[i],NULL, (void*)Berber,(void*)&i);  // Berber thread'lerini pthread_create methodu ile oluÅŸturduk
 		sleep(1);
 	    }
 	    for(int i=0; i < musteriSayisi;i++)
 	    {
-		pthread_create(&musteri[i],NULL, (void*)Musteri,(void*)&i);  // Müşteri thread'lerini pthread_create methodu ile oluşturduk
+		pthread_create(&musteri[i],NULL, (void*)Musteri,(void*)&i);  // MÃ¼ÅŸteri thread'lerini pthread_create methodu ile oluÅŸturduk
 		sleep(1);
 	    }
-	    for(int i=0; i < musteriSayisi;i++)			// Tüm Müşterilerin işlemlerinin bitmesini bekliyoruz
+	    for(int i=0; i < musteriSayisi;i++)			// TÃ¼m MÃ¼ÅŸterilerin iÅŸlemlerinin bitmesini bekliyoruz
 	    {
 		pthread_join(musteri[i],NULL);
 		sleep(1);
 	    }
     	}
-    	else if(musteriSayisi==0 )				// Girilen müşteri sayısı 0 ise berber uyumaya devam eder
+    	else if(musteriSayisi==0 )				// Girilen mÃ¼ÅŸteri sayÄ±sÄ± 0 ise berber uyumaya devam eder
     	{
 	    printf("\nBerber Uyuyor.\n\n");
     	}

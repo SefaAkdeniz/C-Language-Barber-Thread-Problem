@@ -94,7 +94,8 @@ void Musteri(void* sayi)	// Müşteri fonksiyonu müşteri numarasını parametr
     }
     else{
         sem_post(&mutex_sem); 	// Engel kaldırılır , eğer boş sandalye yoksa müşteri dükkandan ayrılır
-        printf("%d. Musteri\tbeklemek icin sandalye bulamadi. Dukkandan ayriliyor.\n\n",kimlik);  
+        printf("%d. Musteri\tbeklemek icin sandalye bulamadi. Dukkandan ayriliyor.\n\n",kimlik); 
+	musteriDurumSayisi=musteriDurumSayisi-1;
     }
     pthread_exit(0);	// Thread sonlandırılır
 }
